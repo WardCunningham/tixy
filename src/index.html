@@ -188,6 +188,11 @@
           callback = runner.eval(`
       (function f(t,i,x,y) {
         try {
+          let sin = Math.sin
+          let cos = Math.cos
+          let tan = Math.tan
+          let abs = Math.abs
+          let ran = Math.random
           return ${code.replace(/\\/g, ';')};
         } catch (error) {
           return error;
