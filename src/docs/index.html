@@ -116,7 +116,7 @@
       <label for="input">// click the dots for more</label>
     </div>
 
-    <label id="label" for="input">(t,i,x,y) =></label>
+    <label id="label" for="input">(t,i,x,y,z) =></label>
     <input name="code" id="input" type="text" value="Math.sin(y/8 + t)" autocomplete="off" autocapitalize="off"
       spellcheck="false" autocorrect="off" maxlength="32" />
     </div>
@@ -127,7 +127,7 @@
       import * as oc from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/controls/OrbitControls.js';
 
       function sphere(color) {
-        let geometry = new THREE.SphereGeometry(0.48, 32, 32);
+        let geometry = new THREE.SphereGeometry(0.48, 16, 16);
         //let material = new THREE.MeshBasicMaterial({ color });
         let material = new THREE.MeshPhongMaterial({ color: 0x156289, emissive: 0x072534, flatShading: true });
         let shape = new THREE.Mesh(geometry, material);
@@ -167,7 +167,7 @@
         1.0,
         1000,
       );
-      camera.position.set(0, 0, 20.0);
+      camera.position.set(0, 0, 30.0);
       let controls = new oc.OrbitControls(camera, canvas);
 
       // import examples from './examples.json';
@@ -218,18 +218,35 @@
 
       const cells = [];
 
-      for (let y = 0, index = 0; y < count; y++) {
-        for (let x = 0; x < count; x++) {
-          index++;
+      function should_render(x, y, z) {
+        return false ||
+          z == 0 ||
+          z == 15 ||
+          // y == 0 ||
+          // y == 15 ||
+          x == 0 ||
+          x == 15
 
-          // cells.push({
-          //   index,
-          //   x,
-          //   y
-          // });
-          let shape = sphere(0xffffff);
-          scene.add(shape);
-          cells.push(shape);
+      }
+
+      for (let z = 0, index = 0; z < count; z++) {
+        for (let y = 0, index = 0; y < count; y++) {
+          for (let x = 0; x < count; x++) {
+            if (!should_render(x, y, z)) continue;
+            index++;
+
+            // cells.push({
+            //   index,
+            //   x,
+            //   y
+            // });
+            let shape = sphere(0xffffff);
+            shape.position.x = x - 7.5;
+            shape.position.y = y - 7.5;
+            shape.position.z = z - 7.5;
+            scene.add(shape);
+            cells.push(shape);
+          }
         }
       }
       window.cells = cells;
@@ -250,7 +267,7 @@
 
         try {
           callback = runner.eval(`
-      (function f(t,i,x,y) {
+      (function f(t,i,x,y,z) {
         try {
           let sin = Math.sin
           let cos = Math.cos
@@ -295,43 +312,44 @@
 
         output.width = output.height = width;
         let index = 0;
-        for (let y = 1; y <= count; y++) {
-          for (let x = 1; x <= count; x++) {
-            index++;
+        for (let z = 1; z <= count; z++) {
+          for (let y = 1; y <= count; y++) {
+            for (let x = 1; x <= count; x++) {
+              if (!should_render(x - 1, y - 1, z - 1)) continue;
+              index++;
 
-            const value = callback(time, index, x, y);
-            const offset = size / 2;
-            let color = '#FFF';
-            let radius = (value * size) / 2;
+              const value = callback(time, index, x, y, z);
+              const offset = size / 2;
+              let color = '#FFF';
+              let radius = (value * size) / 2;
 
-            if (radius < 0) {
-              radius = -radius;
-              color = '#F24';
+              if (radius < 0) {
+                radius = -radius;
+                color = '#F24';
+              }
+
+              if (radius > size / 2) {
+                radius = size / 2;
+              }
+
+              let scale = radius / (size / 2);
+              let shape = cells[index - 1];
+              shape.material.color = new THREE.Color(color);
+              shape.scale.x = scale + 0.00001;
+              shape.scale.y = scale + 0.00001;
+              shape.scale.z = scale + 0.00001;
+
+              //   context.beginPath();
+              //   context.fillStyle = color;
+              //   context.arc(
+              //     x * (size + spacing) - offset,
+              //     y * (size + spacing) - offset,
+              //     radius,
+              //     0,
+              //     2 * Math.PI
+              //   );
+              //   context.fill();
             }
-
-            if (radius > size / 2) {
-              radius = size / 2;
-            }
-
-            let scale = radius / (size / 2);
-            let shape = cells[index - 1];
-            shape.position.x = x - 8.5;
-            shape.position.y = y - 8.5;
-            shape.material.color = new THREE.Color(color);
-            shape.scale.x = scale + 0.00001;
-            shape.scale.y = scale + 0.00001;
-            shape.scale.z = scale + 0.00001;
-
-            //   context.beginPath();
-            //   context.fillStyle = color;
-            //   context.arc(
-            //     x * (size + spacing) - offset,
-            //     y * (size + spacing) - offset,
-            //     radius,
-            //     0,
-            //     2 * Math.PI
-            //   );
-            //   context.fill();
           }
         }
 
