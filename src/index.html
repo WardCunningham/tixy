@@ -7,7 +7,6 @@
   <title>(t,i,x,y) => "creative code golfing"</title>
   <meta name="description"
     content="A minimalist coding environment. Control 16x16 points with a single JavaScript function.">
-  <link rel="stylesheet" href="style.styl" inline="inline" />
 
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
@@ -102,10 +101,52 @@
 
     <iframe id="code-runner" sandbox="allow-same-origin"></iframe>
     <script type="module">
+      import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/build/three.module.js';
+      import * as oc from 'https://threejsfundamentals.org/threejs/resources/threejs/r113/examples/jsm/controls/OrbitControls.js';
+
+      function sphere(color) {
+        let geometry = new THREE.SphereGeometry(0.48, 32, 32);
+        //let material = new THREE.MeshBasicMaterial({ color });
+        let material = new THREE.MeshPhongMaterial({ color: 0x156289, emissive: 0x072534, flatShading: true });
+        let shape = new THREE.Mesh(geometry, material);
+        // shape.position.x = wp.x;
+        // shape.position.y = wp.y;
+        // shape.position.z = wp.z;
+        return shape;
+      }
+
       const count = 16;
       const size = 16;
       const spacing = 1;
       const width = count * (size + spacing);
+
+      const output = document.getElementById('output');
+      output.width = output.height = width;
+
+      const scene = new THREE.Scene();
+      const color = 0xFFFFFF;
+      const intensity = 1;
+      const light = new THREE.DirectionalLight(color, intensity);
+      light.position.set(-1, 10, 4);
+      scene.add(light);
+      const ambient_light = new THREE.AmbientLight(0x404040); // soft white light
+      scene.add(ambient_light);
+
+      let canvas = document.querySelector("#output");
+      let renderer = new THREE.WebGLRenderer({ canvas });
+
+      window.scene = scene;
+      window.canvas = canvas;
+      window.renderer = renderer;
+
+      let camera = new THREE.PerspectiveCamera(
+        50,
+        1.0,
+        1.0,
+        1000,
+      );
+      camera.position.set(0, 0, 20.0);
+      let controls = new oc.OrbitControls(camera, canvas);
 
       // import examples from './examples.json';
       window.examples = {
@@ -147,14 +188,11 @@
       const input = document.getElementById('input');
       const editor = document.getElementById('editor');
       const comment = document.getElementById('comment');
-      const output = document.getElementById('output');
       const context = output.getContext('2d');
 
       let callback = function () { };
       let startTime = new Date();
       let code = '';
-
-      output.width = output.height = width;
 
       const cells = [];
 
@@ -162,13 +200,17 @@
         for (let x = 0; x < count; x++) {
           index++;
 
-          cells.push({
-            index,
-            x,
-            y
-          });
+          // cells.push({
+          //   index,
+          //   x,
+          //   y
+          // });
+          let shape = sphere(0xffffff);
+          scene.add(shape);
+          cells.push(shape);
         }
       }
+      window.cells = cells;
 
       function readURL() {
         const url = new URL(document.location);
@@ -221,6 +263,7 @@
       });
 
       function render() {
+        // scene.remove(...scene.children);
         const time = (new Date() - startTime) / 1000;
 
         if (!callback) {
@@ -248,18 +291,30 @@
               radius = size / 2;
             }
 
-            context.beginPath();
-            context.fillStyle = color;
-            context.arc(
-              x * (size + spacing) - offset,
-              y * (size + spacing) - offset,
-              radius,
-              0,
-              2 * Math.PI
-            );
-            context.fill();
+            let scale = radius / (size / 2);
+            let shape = cells[index - 1];
+            shape.position.x = x - 8.5;
+            shape.position.y = y - 8.5;
+            shape.material.color = new THREE.Color(color);
+            shape.scale.x = scale + 0.00001;
+            shape.scale.y = scale + 0.00001;
+            shape.scale.z = scale + 0.00001;
+
+            //   context.beginPath();
+            //   context.fillStyle = color;
+            //   context.arc(
+            //     x * (size + spacing) - offset,
+            //     y * (size + spacing) - offset,
+            //     radius,
+            //     0,
+            //     2 * Math.PI
+            //   );
+            //   context.fill();
           }
         }
+
+        controls.update();
+        renderer.render(scene, camera);
 
         window.requestAnimationFrame(render);
       }
