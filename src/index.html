@@ -91,11 +91,24 @@
     #code-runner {
       display: none
     }
+
+    button {
+      background-color: black;
+      color: white;
+      float: right;
+    }
+
+    button:focus {
+      outline: none;
+    }
   </style>
 </head>
 
 <body>
-  <canvas id="output"></canvas>
+  <div>
+    <canvas id="output"></canvas>
+    <button>&gt;&gt;</button>
+  </div>
 
   <form id="editor">
     <div id="comment">
@@ -378,7 +391,7 @@
         updateCallback();
       }
 
-      output.addEventListener('click', nextExample);
+      document.querySelector("button").addEventListener('click', nextExample);
 
       window.onpopstate = function (event) {
         readURL();
